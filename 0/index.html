@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>Crontab and Rsync Debian 11</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header>
+		<h1>Crontab and Rsync Debian 11</h1>
+        <p>Belajar cara mengatur tugas-tugas berjadwal dan sinkronisasi data dengan mudah.</p>
+	</header>
+	<main>
+        <div class="container">
+            <section>
+                <h2>Intro</h2>
+                <p>Howdy-do? Artikel kali ini akan membahas rsync dan crontab juga sedikit konfigurasi dasar pada Debian 11. Kenapa mereka sering bekerja berdampingan dan kapan mungkin kita hanya perlu menggunakan salah satu dari mereka.</p>
+                <p>Mari kita mulai dengan memahami konsep dasar lalu meningkat ke langkah-langkah konfigurasi rsync dan crontab di Debian 11. Jadi, apa itu rsync dan crontab?.</p>
+            </section>
+
+            <section>
+                <h2>rsync</h2>
+                <p><strong>rsync (Remote Synchronization)</strong></p>
+                <p>rsync adalah alat yang sangat berguna untuk menyalin dan menyinkronkan data di lingkungan Linux dan Unix. Ini memiliki kemampuan untuk melakukan transfer data lokal atau jarak jauh dengan efisiensi tinggi. rsync bekerja dengan membandingkan file di sumber dan tujuan, dan hanya mentransfer data yang berbeda antara keduanya. Berikut adalah beberapa poin utama tentang rsync :</p>
+                <p><strong>Cara kerja : </strong></p>
+                <p>rsync bekerja dengan membandingkan file di sumber dan tujuan, lalu hanya mengirim data yang berbeda antara keduanya, yang menghemat bandwith dan waktu. Selain itu juga dapat mengkompresi data selama transfer.</p>
+                <p><strong>Keuntungan : </strong></p>
+                <p><b><u>Efisiensi</u></b> dalam mengirim data karena hanya mengirim 'yang berubah' saja, sehingga hemat bandwith dan waktu. <b><u>Sinkronisasi yang akurat</u></b> dengan memastikan bahwa sumber dan tujuan memiliki hasil identik setelah operasi sinkronisasi dilakukan. Dan kelebihan dalam transfer nya pun mumpuni menggunakan SSH dimana <b><u>Transfer melalui SSH</u></b> dapat digunakan rsync untuk transfer data yang aman melalui jaringan. </p>
+                <p><strong>Penggunaan umum : </strong></p>
+                <p>Biasanya rsync digunakan untuk <b><u>membuat salinan data</u></b> baik secara lokal maupun server jarak jauh, <b><u>sinkronisasi folder</u></b>, dan juga <b><u>replikasi server</u></b>.</p>
+                <br><br>
+            </section>
+
+            <section>
+                <h2>cron</h2>
+                <p><strong>cron dan crontab</strong></p>
+                <p>cron adalah daemon (layanan latar belakang) di sistem Linux yang digunakan untuk menjalankan tugas-tugas yang dijadwalkan secara berkala. Crontab adalah alat yang digunakan untuk membuat, mengelola, dan melihat daftar tugas yang dijadwalkan oleh cron. Berikut adalah beberapa poin utama tentang cron :</p>
+                <p><strong>Cara kerja : </strong></p>
+                <p>Pengguna dapat membuat entri dalam tabel cron untuk menjalankan skrip atau perintah pada waktu tertentu atau dalam interval waktu tertentu. </p>
+                <p><strong>Keuntungan : </strong></p>
+                <p><b><u>Otomatisasi</u></b> tugas-tugas rutin seperti backup, pemrosesan data, dan pemeliharaan sistem. <b><u>Waktu penjadwalan</u></b> dengan pengguna memiliki kendali penuh atas kapan tugas-tugas berjalan sesuai waktu penjadwalan yang diinginkan. <b><u>Laporan</u></b> yang dapat dipantau melalui log atau email.</p>
+                <p><strong>Penggunaan umum : </strong></p>
+                <p>Biasanya digunakan untuk kegiatan yang butuh penjadwalan seperti, <b><u>backup berkala</u>, <u>pembersihan log</u>, <u>updating sistem.</u></b></p>
+                <br><br>
+            </section>
+
+            <section>
+                <h2>Topologi dan Skenario</h2>
+                <img src="topologi.PNG">      
+                <p>Sinkronkan tampilan website Server 1 dan Server 2 setiap 2 menit sekali dan pastikan bahwa Server 2 selalu mengikuti perubahan tampilan website yang dilakukan Server 1.</p>          
+            </section>
+
+            <section>
+                <h2>Langkah 1: Preparation</h2>
+                <p>Sediakan 2 virtual machine yang akan bertindak sebagai server</p>
+                <img src="1.png"><br>
+                <img src="2.png">
+                <P>Konfigurasikan IP Address pada kedua VM</P>
+                <img src="3.png"><br>
+                <img src="4.png">
+                <p>Install package pada kedua VM</p>
+                <img src="5.png">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Package</th>
+                            <th>Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>php7.4</td>
+                            <td>Ini adalah paket PHP versi 7.4, yang merupakan bahasa pemrograman yang digunakan untuk mengembangkan situs web dinamis. PHP memungkinkan kamu untuk membuat halaman web interaktif.</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>apache2</td>
+                            <td>Ini adalah server web Apache versi 2. Server web Apache digunakan untuk menyajikan halaman web kepada pengguna melalui protokol HTTP.</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>libapache2-mod-php</td>
+                            <td>Ini adalah modul Apache yang memungkinkan server Apache untuk menjalankan kode PHP. Ini diperlukan agar Apache dapat memproses skrip PHP.</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>rsync</td>
+                            <td>Ini adalah alat sinkronisasi file yang digunakan untuk menyalin dan menyinkronkan file antara dua lokasi, baik di dalam server yang sama atau di server yang berbeda.</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>cron</td>
+                            <td>Ini adalah layanan penjadwalan tugas di sistem Linux. Cron memungkinkan kamu untuk menjalankan tugas-tugas secara terjadwal, seperti menjalankan perintah atau skrip pada waktu tertentu.</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>ssh</td>
+                            <td>Ini adalah protokol keamanan yang digunakan untuk mengakses dan mengontrol server jarak jauh melalui koneksi terenkripsi. SSH digunakan untuk mengamankan akses ke server dan untuk menjalankan perintah dari jarak jauh.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Konfigurasi default SSH dengan izin root diperbolehkan pada kedua VM</p>
+                <img src="6.png"><br>
+                <img src="7.png"><br>
+                <img src="8.png">
+                <p>Buat kunci keygen di VM srv01</p>
+                <img src="9.png">
+                <p>Salin kunci ke VM tujuan (srv02)</p>
+                <img src="10.png"><br>
+                <p>Are you sure you want to continue connection (yes/no/[fingerprint])? jawab 'yes'</p>
+                <br>
+                <img src="11.png"><br>
+                <p>masukkan password srv02</p>
+                <img src="12.png">
+                <p>Sehingga muncul keterangan seperti berikut</p>
+                <img src="13.png">
+                <p>Sekarang buat kunci keygen di VM srv02 dan salin kunci ke VM tujuan (srv01)</p>
+                <img src="14.png">
+                <p>Sampai muncul keterangan seperti berikut</p>
+                <img src="15.png">
+            </section>
+
+            <section>
+                <h2>Langkah 2: Server Web</h2>
+                <p>Konfigurasikan Server Web Apache2 di srv01 terlebih dahulu</p>
+                <img src="16.png"><br>
+                <img src="17.png"><br>
+                <img src="18.png">
+                <p>Arahkan Documentroot ke path berikut (menyesuaikan)</p>
+                <img src="20.png">
+                <p>Disable-kan file konfigurasi default Apache2</p>
+                <img src="21.png">
+                <p>Enable-kan file konfigurasi yang kita gunakan</p>
+                <img src="22.png">
+                <p>Buat konten index.php di dalam direktori yang diarahkan pada Documentroot sebelumnya</p>
+                <img src="23.png"><br>
+                <img src="24.png">
+                <p>Restart Apache2</p>
+                <img src="25.png">
+                <p>Konfigurasikan Server Web Apache2 di srv02</p>
+                <img src="26.png"><br>
+                <img src="27.png">
+                <p>Jangan lupa untuk men-disable dan enable file konfigurasi juga restart service Apache2</p>
+                <img src="28.png">
+                <p>Di Srv02 tidak perlu membuat konten index.php di /var/www/php ini kita biarkan kosong dulu, karena Srv02 akan mensinkronkan dirinya dengan Srv01.</p>
+                <img src="29.png">
+            </section>
+
+            <section>
+                <h2>Langkah 3 : Crontab dan Rsync</h2>
+                <p>Konfigurasi file Crontab untuk membuat penjadwalan sinkronisasi setiap 2 menit sekali</p>
+                <img src="30.png">
+                <p>Pilih editor teks, defaultnya adalah nano (1). Tapi bisa juga pakai vim (2)</p>
+                <img src="31.png">
+                <p>Di baris paling bawah terdapat parameter dari crontab</p>
+                <img src="u.png">
+                <table>
+                    <tbody>
+                        <th>No.</th>
+                        <th>Parameter</th>
+                        <th>Penjelasan</th>
+                        <th>Penggunaan</th>
+                        <tr>
+                            <td>1</td>
+                            <td>m</td>
+                            <td>Minute (menit)</td>
+                            <td>0 - 59</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>h</td>
+                            <td>Hour (jam)</td>
+                            <td>0 - 23</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>dom</td>
+                            <td>Day Of Month (tanggal)</td>
+                            <td>1 - 31</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>mon</td>
+                            <td>Month (bulan)</td>
+                            <td>1-12</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>dow</td>
+                            <td>Day Of Week (hari)</td>
+                            <td>0-6 (dimulai dari hari minggu '0' terkadang '7' juga mewakilkan hari minggu di beberapa sistem)</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>command</td>
+                            <td>Perintah</td>
+                            <td>Kita bisa menambahkan perintah yang akan dilakukan Cron, kali ini kita akan memasukkan perintah/command rsync</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Di baris paling bawah dapat diketikkan seperti ini untuk crontab dan rsync</p>
+                <img src="32.png">
+                <table>
+                    <tbody>
+                        <tr>
+                            <th>Crontab</th>
+                            <th>Penjelasan</th>
+                        </tr>
+                        <tr>
+                            <td>*/2</td>
+                            <td>Bagian pertama dari format dan mengacu pada "menit" dimana angka 2 berarti perintah akan dijalankan setiap 2 menit sekali</td>
+                        </tr>
+                        <tr>
+                            <td>*</td>
+                            <td>Bagian kedua mengacu pada "jam", tanda "*" berarti perintah dapat dijalankan setiap jam</td>
+                        </tr>
+                        <tr><td>*</td><td>Bagian ketiga mengacu pada "tanggal", tanda (*) berarti perintah dijalankan setiap hari dalam sebulan</td></tr>
+                        <tr><td>*</td><td>Bagian keempat mengacu pada "bulan", tanda (*) berarti perintah dijalankan setiap bulan</td></tr>
+                        <tr><td>*</td><td>Bagian kelima mengacu pada "hari", tanda (*) berarti perintah dijalankan setiap hari dalam seminggu</td></tr>
+                    </tbody>
+                </table>
+                <table>
+                    <tbody>
+                        <tr><th>Rsync</th><th>Penjelasan</th></tr>
+                        <tr><td>rsync -avze ssh</td><td>Perintah utama yang digunakan untuk sinkronisasi <br> opsi "-a" sebagai mode arsip yang memastikan seluruh atribut seperti hak akses dan lainnya dipertahankan saat proses sinkronisasi. <br> opsi "-v" mengaktifkan mode verbose yang akan menampilkan output lebih terperinci. <br> opsi "-z" mengaktifkan kompresi data agar mengurangi penggunaan bandwith. <br> opsi "-e" mengganti shell eksekusi default atau menentukan protokol yang digunakan dalam koneksi antara srv01 dan srv02. Karena kita menggunakan ssh maka diikuti dengan perintah "ssh".</td></tr>
+                        <tr><td>root@202.101.0.2:/var/www/php/ /var/www/php</td><td>Server yang datanya akan disalin, menggunakan IP Address dan user untuk mendefinisikan sumber data dan mengambil data dari direktori /var/www/php/</td></tr>
+                        <tr><td>/var/www/php</td><td>Tujuan atau lokasi tempat menyimpan data salinan (direktori lokal di sistem kita)</td></tr>
+                    </tbody>
+                </table>
+                <p>Tutup dan simpan file crontab hingga ada keterangan seperti berikut</p>
+                <img src="33.png">
+            </section>
+
+            <section>
+                <h2>Hasil Sinkronisasi di Server</h2>
+                <p>Setelah 2 menit, direktori /var/www/php yang kosong tadi sekarang sudah ada file index.php yang dipastikan isinya sama dengan Srv01</p>
+                <img src="34.png">
+            </section>
+
+            <section>
+                <h2>Hasil Sinkronisasi di Client</h2>
+                <p>Perbandingan pertama keduanya jam 12.27, sesuai dengan konten index.php</p>
+                <img src="35.png"><br>
+                <img src="36.png">
+                <p>Perbandingan kedua pada jam 12.29, kita mencoba mengubah tampilan Srv01 dan belum diikuti oleh Srv02</p>
+                <img src="37.png"><br>
+                <img src="38.png">
+                <p>Setelah 2 menit Srv02 mengikuti perubahan dari Srv01</p>
+                <img src="39.png">
+                <p>Perbandingan ketiga pada jam 12.33, kembali merubah tampilan Srv01</p>
+                <img src="40.png">
+                <p>Tampilan di 2 menit berikutnya</p>
+                <img src="41.png">
+            </section>
+
+            <section>
+                <h2>Kesimpulan</h2>
+                <p>rsync dan crontab memiliki peran penting dan sangat berguna dalam mengoptimalkan sistem Linux, karena itu mereka masih relevan untuk zaman sekarang ini. rsync memungkinkan kita untuk menyinkronkan data dengan efisiensi tinggi, sementara cron dan crontab memungkinkan kita menjalankan tugas berjadwal sesuai dengan kebutuhan.</p>
+                <p>Menggabungkan keduanya dapat memberikan solusi otomatisasi yang kuat untuk berbagai keperluan seperti backup, sinkronisasi, dan masih banyak lagi. Dengan pemahaman yang baik tentang keduanya, kita dapat mengelola tugas-tugas secara efisien dan efektif menggunakan Debian 11 maupun distro Linux lainnya.</p>
+                <p>Selamat mencoba untuk mengelola dan mengotomatisasi tugas-tugasmu dengan rsync dan crontab! Semoga artikel ini membantu kamu memahami dan memanfaatkan potensi penuh dari keduanya dalam mengelola sistem Linux terutama Debian 11.</p>
+            </section>
+
+            <section>
+                <p><strong>Penjelasan tambahan</strong></p>
+                <p>Untuk penggunaan rsync dan crontab, kita tidak selalu harus menggunakan keduanya bersamaan. Pilihan untuk menggunakan salah satu atau keduanya kembali kepada spesifikasi kebutuhan kita. Misalnya, </p>
+                <ul>
+                    <li><b><u>Hanya menggunakan rsync</u></b>, jika kita hanya perlu menjalankan sinkronisasi data secara manual dengan kata lain tidak ada kebutuhan jadwal tertentu, kita bisa jalankan rsync saja.</li>
+                    <li>Lalu <b><u>Hanya menggunakan crontab</u></b>, jika kita hanya perlu menjalankan tugas terjadwal tanpa melibatkan sinkronisasi apapun dengan siapapun, maka kita dapat menggunakan crontab untuk menjadwalkan perintah atau skrip sesuai kebutuhan.</li>
+                    <li>Dan untuk <b><u>Menggabungkan keduanya</u></b>, jika kita perlu menjadwalkan sinkron data secara otomatis. Seperti pada tutorial kali ini.</li>
+                </ul>
+                <p>(akan terlihat jika menggunakannya terpisah dengan crontab)</p>
+                <p>(bisa menggunakan -e nc misalnya untuk netcat. Secara default shell eksekusi nya adalah shell lokal yang ada di sistem tempat kita jalanin perintah rsync. </p>
+                <p>kenapa pake ssh biar lebih secure</p>
+            </section>
+
+        </div>
+    </main>
+    <footer>&copy; 2023 Rizqi Amalia-Debian 11 Series</footer>
+</body>
+</html>
