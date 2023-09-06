@@ -215,7 +215,7 @@
                         </tr>
                         <tr>
                             <td>*</td>
-                            <td>Bagian kedua mengacu pada "jam", tanda "*" berarti perintah dapat dijalankan setiap jam</td>
+                            <td>Bagian kedua mengacu pada "jam", tanda (*) berarti perintah dapat dijalankan setiap jam</td>
                         </tr>
                         <tr><td>*</td><td>Bagian ketiga mengacu pada "tanggal", tanda (*) berarti perintah dijalankan setiap hari dalam sebulan</td></tr>
                         <tr><td>*</td><td>Bagian keempat mengacu pada "bulan", tanda (*) berarti perintah dijalankan setiap bulan</td></tr>
@@ -227,7 +227,7 @@
                         <tr><th>Rsync</th><th>Penjelasan</th></tr>
                         <tr><td>rsync -avze ssh</td><td>"rsync" adalah perintah utama yang digunakan untuk sinkronisasi <br> opsi "-a" sebagai mode arsip yang memastikan seluruh atribut seperti hak akses dan lainnya dipertahankan saat proses sinkronisasi. <br> opsi "-v" mengaktifkan mode verbose yang akan menampilkan output lebih terperinci. <br> opsi "-z" mengaktifkan kompresi data agar mengurangi penggunaan bandwith. <br> opsi "-e" mengganti shell eksekusi default atau menentukan protokol yang digunakan dalam koneksi antara srv01 dan srv02. Karena kita menggunakan ssh maka diikuti dengan perintah "ssh".</td></tr>
                         <tr><td>root@202.101.0.2:/var/www/php/ </td><td>Mendefinisikan server yang datanya akan disalin, menggunakan IP Address "202.101.0.2" dan user "root" untuk mendefinisikan sumber data dan mengambil data dari direktori /var/www/php/ di srv01</td></tr>
-                        <tr><td>/var/www/php</td><td>Tujuan atau lokasi tempat menyimpan data salinan srv02 (direktori lokal di sistem kita)</td></tr>
+                        <tr><td>/var/www/php</td><td>Tujuan atau lokasi tempat menyimpan data salinan (direktori lokal) srv02</td></tr>
                     </tbody>
                 </table>
                 <p>Tutup dan simpan file crontab hingga ada keterangan seperti berikut</p>
